@@ -1,0 +1,52 @@
+﻿@page "/countries"
+
+@inject IRepository repository
+
+<h3>Países</h3>
+
+<GenericList MyList="Countries">
+    <Body>
+        <MudTable Items="@Countries" Hover="true" Breakpoint="Breakpoint.Sm">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">
+                    Countries
+                </MudText>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>CountryId</MudTh>
+                <MudTh>Name</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate Context="CountriesContext">
+                <MudTd DataLabel="CountryId">@CountriesContext.CountryId</MudTd>
+                <MudTd DataLabel="Name">@CountriesContext.Name</MudTd>
+                <MudTd>
+                    <MudFab Color="Color.Primary"
+                            StartIcon="@Icons.Material.Filled.Edit"
+                            Size="Size.Small"
+                            IconSize="Size.Small">
+                    </MudFab>
+                    <MudFab Color="Color.Primary"
+                            StartIcon="@Icons.Material.Filled.DeleteSweep"
+                            Size="Size.Small"
+                            IconSize="Size.Small">
+                    </MudFab>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </Body>
+</GenericList>
+
+
+@code {
+    public List<Country>? Countries { get; set; }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var responseHttp = await repository.Get<List<Country>>("/api/country");
+
+        Countries = responseHttp.Response;
+
+    }
+}

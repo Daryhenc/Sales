@@ -28,4 +28,11 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+// Sirve para permitir todo tipo de conexión
+app.UseCors(x => x
+    .AllowAnyMethod()
+    .AllowAnyHeader()
+    .SetIsOriginAllowed(origin => true)
+    .AllowCredentials());
+
 app.Run();
