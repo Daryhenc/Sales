@@ -1,0 +1,62 @@
+﻿@page "/countries/edit/{CountryId:int}"
+@inject IRepository repository
+@inject NavigationManager navigationManager
+@inject ISnackbar snackbar
+@inject IDialogService dialogService
+<h3>Editar país</h3>
+
+
+@if (country is null )
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+} else
+{
+    <CountriesForm @ref="countriesForm" Country= "country" OnValidSutmit="EditAsync" ReturnAction="Return"/>
+}
+
+@code {
+
+    private Country? country { get; set; }
+    CountriesForm? countriesForm;
+
+    [Parameter]
+    public int CountryId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var responseHttp = await repository.Get<Country>($"/api/country/{CountryId}");
+        if (responseHttp.Error)
+        {
+            if (responseHttp.HttpResponseMessage.StatusCode == HttpStatusCode.NotFound)
+            {
+                navigationManager.NavigateTo("/countries");
+                snackbar.Add("El país a editar no existe.", Severity.Error);
+                return;
+            }
+            var message = await responseHttp.GetErrorMessageAsync();
+            snackbar.Add(message, Severity.Error);
+            return;
+        }
+        country = responseHttp.Response;
+    }
+
+    private async Task EditAsync()
+    {
+        var responseHttp = await repository.Put("/api/country", country);
+        if (responseHttp.Error)
+        {
+            var message = await responseHttp.GetErrorMessageAsync();
+            snackbar.Add(message, Severity.Error);
+            return;
+        }
+        countriesForm!.FormPostedSuccessfully = true;
+        navigationManager.NavigateTo("/countries");
+
+    }
+
+    private void Return()
+    {
+        countriesForm!.FormPostedSuccessfully = true;
+        navigationManager.NavigateTo("/countries");
+    }
+}

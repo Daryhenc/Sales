@@ -1,8 +1,22 @@
 ﻿@page "/countries"
 
 @inject IRepository repository
+@inject ISnackbar snackbar
+@inject NavigationManager navigationManager
+
 
 <h3>Países</h3>
+
+<MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="/contries/create" >Nuevo País</MudButton>
+
+<MudMessageBox @ref="mbox" Title="Confirmación" CancelText="Cancelar">
+    <MessageContent>
+        <p> Esta seguro de borrar este pais? </p>
+    </MessageContent>
+    <YesButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever">Borrar</MudButton>
+    </YesButton>
+</MudMessageBox>
 
 <GenericList MyList="Countries">
     <Body>
@@ -15,18 +29,21 @@
             <HeaderContent>
                 <MudTh>CountryId</MudTh>
                 <MudTh>Name</MudTh>
+                <MudTh>N.- Provinces</MudTh>
                 <MudTh></MudTh>
             </HeaderContent>
             <RowTemplate Context="CountriesContext">
                 <MudTd DataLabel="CountryId">@CountriesContext.CountryId</MudTd>
                 <MudTd DataLabel="Name">@CountriesContext.Name</MudTd>
+                <MudTd DataLabel="N.- Provinces">@CountriesContext.ProvinceNumber</MudTd>
                 <MudTd>
-                    <MudFab Color="Color.Primary"
+                    <MudFab OnClick="@(() => Edit(CountriesContext.CountryId))"
+                            Color="Color.Primary"
                             StartIcon="@Icons.Material.Filled.Edit"
                             Size="Size.Small"
                             IconSize="Size.Small">
                     </MudFab>
-                    <MudFab Color="Color.Primary"
+                    <MudFab OnClick="@(() => DeleteAsync(CountriesContext.CountryId))" Color="Color.Primary"
                             StartIcon="@Icons.Material.Filled.DeleteSweep"
                             Size="Size.Small"
                             IconSize="Size.Small">
@@ -41,12 +58,44 @@
 @code {
     public List<Country>? Countries { get; set; }
 
+    MudMessageBox? mbox { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        var responseHttp = await repository.Get<List<Country>>("/api/country");
+        await LoadAsync();
+    }
 
+    private async Task LoadAsync()
+    {
+        var responseHttp = await repository.Get<List<Country>>("/api/country");
         Countries = responseHttp.Response;
+    }
+
+    private void Edit(int countryId)
+    {
+        navigationManager.NavigateTo($"/countries/edit/{countryId}");
+    }
+
+    private async void DeleteAsync(int countryId)
+    {
+        var result = await mbox!.Show();
+        if (result ==  null || result == false)
+        {
+            return;
+        }
+        var responseHttp = await repository.Delete($"/api/country/{countryId}");
+        if (responseHttp.Error)
+        {
+            if (responseHttp.HttpResponseMessage.StatusCode != HttpStatusCode.NotFound)
+            {
+                var message = await responseHttp.GetErrorMessageAsync();
+                snackbar.Add(message, Severity.Error);
+                return;
+            }
+        }
+        Countries!.Clear();
+        await LoadAsync();
+
 
     }
 }

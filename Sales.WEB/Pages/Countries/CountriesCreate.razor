@@ -1,0 +1,33 @@
+﻿@page  "/contries/create"
+@inject IRepository repository
+@inject NavigationManager navigationManager
+@inject ISnackbar snackbar
+<h3>Crear País</h3>
+
+<CountriesForm @ref="countriesForm" Country="country" OnValidSutmit="Create" ReturnAction="Return" />
+
+@code {
+    private Country country = new();
+    private CountriesForm? countriesForm;
+
+    private async Task Create()
+    {
+
+        var httpResponse = await repository.Post("/api/Country", country);
+        if (httpResponse.Error)
+        {
+            var messaje = await httpResponse.GetErrorMessageAsync();
+
+            snackbar.Add(messaje, Severity.Error);
+            return;
+        }
+        countriesForm!.FormPostedSuccessfully = true;
+        snackbar.Add("País creado", Severity.Success);
+        navigationManager.NavigateTo("/countries");
+    }
+
+    private void Return()
+    {
+        navigationManager.NavigateTo("/countries");
+    }
+}

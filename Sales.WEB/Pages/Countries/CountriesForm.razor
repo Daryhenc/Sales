@@ -1,0 +1,53 @@
+﻿ @inject IDialogService dialogService 
+
+<NavigationLock OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
+
+<EditForm EditContext="editContext" OnValidSubmit="OnValidSutmit">
+    <DataAnnotationsValidator/>
+
+    <MudTextField @bind-Value="Country.Name" Label="Nombre de país" Variant="Variant.Outlined" For="@(() => Country.Name)"></MudTextField>
+    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Outlined" Color="Color.Primary" >Crear País</MudButton>
+    <MudButton @onclick="ReturnAction" Variant="Variant.Outlined" Color="Color.Secondary">Retornar</MudButton>
+</EditForm>
+
+@code {
+    private EditContext editContext = null!;
+
+    [Parameter]
+    [EditorRequired]
+    public Country Country { get; set; } = null!;
+
+    [Parameter]
+    [EditorRequired]
+    public EventCallback OnValidSutmit { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public EventCallback ReturnAction { get; set; }
+
+    public bool FormPostedSuccessfully { get; set; }
+
+    protected override void OnInitialized()
+    {
+        editContext = new EditContext(Country);
+    }
+
+    private async Task OnBeforeInternalNavigation(LocationChangingContext context)
+    {
+        var formWasModified = editContext.IsModified();
+        if (!formWasModified || FormPostedSuccessfully)
+        {
+            return;
+        }
+        var result = await dialogService.ShowMessageBox(
+            "Warning",
+            "¿Esta seguro de salir sin guardar los cambios?",
+            yesText: "Si", cancelText: "No");
+
+        if (result == true)
+        {
+            return;
+        }
+        context.PreventNavigation();
+    }
+}
