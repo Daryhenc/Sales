@@ -1,0 +1,65 @@
+﻿@page "/city/edit/{CityId:int}"
+@inject IRepository repository
+@inject NavigationManager navigationManager
+@inject ISnackbar snackBar
+
+@if (city is null)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="my-7" />
+}else{
+    <CityForm @ref="cityForm" City="city" OnValidSubmit="EditAsync" ReturnAction="Return"/>
+}
+
+
+
+@code {
+    private City? city;
+    private CityForm? cityForm;
+
+    [Parameter]
+    public int CityId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        var responseHttp = await repository.Get<City>($"/api/city/{CityId}");
+        if (responseHttp.Error)
+        {
+            if (responseHttp.HttpResponseMessage.StatusCode == HttpStatusCode.NotFound)
+            {
+                snackBar.Add("Petición no encontrada", Severity.Error);
+                navigationManager.NavigateTo("/countries");
+                return;
+            }
+            var message = await responseHttp.GetErrorMessageAsync();
+            snackBar.Add(message, Severity.Error);
+            return;
+        }
+        city = responseHttp.Response;
+    }
+
+    private async Task EditAsync()
+    {
+        city!.CityId = CityId;
+        var responseHttp = await repository.Put($"/api/city/", city);
+        if (responseHttp.Error)
+        {
+            var message = await responseHttp.GetErrorMessageAsync();
+            snackBar.Add(message, Severity.Error);
+            return;
+        }
+
+        snackBar.Add("Ciudad actualizada correctamente.");
+        Return();
+    }
+
+    private void Return()
+    {
+        cityForm!.FormPostedSuccessfully = true;
+        navigationManager.NavigateTo($"/province/detail/{city!.ProvinceId}");
+    }
+}

@@ -1,0 +1,123 @@
+﻿@page "/province/Detail/{ProvinceId:int}"
+@inject IRepository repository
+@inject ISnackbar snackBar
+@inject NavigationManager navigationManager
+
+<h3>ProvinceDetail => @ProvinceId</h3>
+
+
+<MudMessageBox @ref="mbox" Title="Confirmación" CancelText="Cancelar">
+    <MessageContent>
+        <p> ¿Esta seguro de querer borrar esta provincia? </p>
+    </MessageContent>
+    <YesButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever">Borrar</MudButton>
+    </YesButton>
+</MudMessageBox>
+
+@if (province is null)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+}else{
+    <h3>@province.Name</h3>
+    <div>
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="(() => CreateCity(ProvinceId))">Crear Provincia</MudButton>
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="/countries">Regresar</MudButton>
+    </div>
+
+    <GenericList MyList="city">
+        <Body>
+            <MudTable Items="@city" Hover="true" Breakpoint="Breakpoint.Sm">
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6">
+                        Cities
+                    </MudText>
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh>Citie Id</MudTh>
+                    <MudTh>City</MudTh>
+                    <MudTh></MudTh>
+                </HeaderContent>
+                <RowTemplate Context="CityContext">
+                    <MudTd DataLabel="CityId">@CityContext.CityId</MudTd>
+                    <MudTd DataLabel="Name">@CityContext.Name</MudTd>
+                    <MudTd>
+                        <MudFab OnClick="@(() => Edit(CityContext.CityId))"
+                            Color="Color.Info"
+                            StartIcon="@Icons.Material.Filled.Edit"
+                            Size="Size.Small"
+                            IconSize="Size.Small">
+                        </MudFab>
+                        <MudFab OnClick="@(() => DeleteAsync(CityContext.ProvinceId))" Color="Color.Error"
+                            StartIcon="@Icons.Material.Filled.DeleteSweep"
+                            Size="Size.Small"
+                            IconSize="Size.Small">
+                        </MudFab>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </Body>
+    </GenericList>
+}
+
+
+@code {
+    private Province? province;
+    private List<City>? city;
+    private MudMessageBox? mbox;
+
+    [Parameter]
+    public int ProvinceId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        var responseHttp = await repository.Get<Province>($"/api/province/{ProvinceId}");
+        if (responseHttp.Error)
+        {
+            if (responseHttp.HttpResponseMessage.StatusCode == HttpStatusCode.NotFound)
+            {
+                snackBar.Add("Petición no encontrada.", Severity.Error);
+                navigationManager.NavigateTo($"/countries");
+                return;
+            }
+            var message = await responseHttp.GetErrorMessageAsync();
+            snackBar.Add(message, Severity.Error);
+
+        }
+        province = responseHttp.Response;
+        city = province!.Cities!.ToList(); 
+    }
+
+    private void Edit(int cityId)
+    {
+        navigationManager.NavigateTo($"/city/edit/{cityId}"); 
+    }
+    private async void DeleteAsync(int CityId)
+    {
+        var result = await mbox!.Show();
+        if (result == null || result == false)
+        {
+            return;
+        }
+        var responseHttp = await repository.Delete($"/api/city/{CityId}");
+        if (responseHttp.Error)
+        {
+            if (responseHttp.HttpResponseMessage.StatusCode == HttpStatusCode.NotFound)
+            {
+                var message = await responseHttp.GetErrorMessageAsync();
+                snackBar.Add(message, Severity.Error);
+                return;            
+            }
+        }
+        snackBar.Add("Ciudad borrada correctamente.", Severity.Success);
+    }
+    private void CreateCity(int ProvinceId)
+    {
+        navigationManager.NavigateTo($"/city/create/{ProvinceId}");
+    }
+}

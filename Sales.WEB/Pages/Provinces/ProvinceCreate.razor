@@ -1,0 +1,38 @@
+﻿@page "/province/create/{CountryId:int}"
+@inject IRepository repository
+@inject NavigationManager navigationManager
+@inject ISnackbar snackbar
+<h3>Crear Provincia</h3>
+
+<ProvinceForm @ref="provinceForm" Province="province" OnValidSubmit="Create" ReturnAction="Return" />
+
+@code {
+    private Province province = new();
+    private ProvinceForm? provinceForm;
+
+    [Parameter]
+    public int CountryId { get; set; }
+
+    private async Task Create()
+    {
+        province.CountryId = CountryId;
+        var httpResponse = await repository.Post("/api/province", province);
+        if (httpResponse.Error)
+        {
+            var messaje = await httpResponse.GetErrorMessageAsync();
+
+            snackbar.Add(messaje, Severity.Error);
+            return;
+        }
+
+        snackbar.Add("Provincia creada", Severity.Success);
+        Return();
+
+    }
+
+    private void Return()
+    {
+        provinceForm!.FormPostedSuccessfully = true;
+        navigationManager.NavigateTo($"/countries/details/{CountryId}");
+    }
+}

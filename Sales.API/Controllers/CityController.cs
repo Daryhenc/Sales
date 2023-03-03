@@ -7,83 +7,70 @@ namespace Sales.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class CountryController : ControllerBase
+    public class CityController : ControllerBase
     {
         private readonly DataContext _context;
 
-        public CountryController(DataContext context)
+        public CityController(DataContext context)
         {
             _context = context;
-        }
-
-        [HttpGet("full")]
-        public async Task<IActionResult> GetFullAsync()
-        {
-            return Ok(await _context.Countries
-                .Include(p => p.Provinces!)
-                .ThenInclude(c => c.Cities)
-                .ToListAsync());
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAsync()
         {
-            return Ok(await _context.Countries
-                .Include(p => p.Provinces)
-                .ToListAsync());
+            return Ok(await _context.Cities.ToListAsync());
         }
 
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetAsync(int id)
         {
-            var country = await _context.Countries
-                .Include(x => x.Provinces!)
-                .ThenInclude(c => c.Cities)
-                .FirstOrDefaultAsync(c => c.CountryId == id); 
-            if (country == null)
+            var city = await _context.Cities.FirstOrDefaultAsync(c => c.CityId == id);
+            if (city == null)
             {
                 return NotFound();
             }
-            return Ok(country);
+            return Ok(city);
         }
 
         [HttpPost]
-        public async Task<IActionResult> PostAsync(Country country)
+        public async Task<IActionResult> PostAsync(City city)
         {
             try
             {
-                _context.Add(country);
+                _context.Add(city);
                 await _context.SaveChangesAsync();
-                return Ok(country);
+                return Ok(city);
 
             }
             catch (DbUpdateException dbUpdateException)
             {
                 if (dbUpdateException.InnerException!.Message.Contains("duplicate"))
                 {
-                    return BadRequest("Ya existe un país con el mismo nombre.");
+                    return BadRequest("Ya existe una ciudad con el mismo nombre.");
                 }
-                return BadRequest(dbUpdateException.Message);               
+                return BadRequest(dbUpdateException.Message);
             }
-            catch (Exception e) { 
+            catch (Exception e)
+            {
                 return BadRequest(e.Message);
             }
         }
 
         [HttpPut]
-        public async Task<IActionResult> PutAsync(Country country)
+        public async Task<IActionResult> PutAsync(City city)
         {
             try
             {
-                _context.Update(country);
+                _context.Update(city);
                 await _context.SaveChangesAsync();
-                return Ok(country);
+                return Ok(city);
             }
             catch (DbUpdateException dbUpdateException)
             {
                 if (dbUpdateException.InnerException!.Message.Contains("duplicate"))
                 {
-                    return BadRequest("Ya existe un país con el mismo nombre.");
+                    return BadRequest("Ya existe una ciudad con el mismo nombre.");
                 }
                 return BadRequest(dbUpdateException.Message);
             }
@@ -96,14 +83,16 @@ namespace Sales.API.Controllers
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> DeleteAsync(int id)
         {
-            var country = await _context.Countries.FirstOrDefaultAsync(c => c.CountryId == id);
-            if (country == null)
+            var city = await _context.Cities.FirstOrDefaultAsync(c => c.CityId == id);
+            if (city == null)
             {
                 return NotFound();
             }
-            _context.Remove(country);
+            _context.Remove(city);
             await _context.SaveChangesAsync();
             return NoContent();
         }
+
+
     }
 }

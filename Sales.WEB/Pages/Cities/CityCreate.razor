@@ -1,0 +1,35 @@
+﻿@page "/city/create/{ProvinceId:int}"
+@inject IRepository repository
+@inject NavigationManager navigationManager
+@inject ISnackbar snakBar
+
+<h3>Crear ciudad</h3>
+
+<CityForm @ref="cityForm" City="city" OnValidSubmit="Create" ReturnAction="Return"></CityForm>
+
+@code {
+    private City city = new City();
+    private CityForm? cityForm;
+
+    [Parameter]
+    public int ProvinceId { get; set; }
+
+    private async Task Create()
+    {
+        city.ProvinceId = ProvinceId;
+        var responseHttp = await repository.Post("/api/city", city);
+        if (responseHttp.Error)
+        {
+            var message = await responseHttp.GetErrorMessageAsync();
+            snakBar.Add(message, Severity.Error);
+            return;
+        }
+        snakBar.Add("Ciudad creada correctamente.", Severity.Success);
+        Return();
+    }
+    private void Return()
+    {
+        cityForm!.FormPostedSuccessfully = true;
+        navigationManager.NavigateTo($"/province/Detail/{ProvinceId}");
+    }
+}

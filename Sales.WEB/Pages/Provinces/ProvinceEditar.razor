@@ -1,0 +1,68 @@
+﻿@page "/province/edit/{ProvinceId:int}"
+
+@inject IRepository repository
+@inject ISnackbar snackBar
+@inject NavigationManager navigationManager
+
+<h3>ProvinceEditar @ProvinceId</h3>
+
+@if (province is null)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+ 
+} else
+{
+    <ProvinceForm @ref="provinceForm" Province="province" OnValidSubmit="EditAsync" ReturnAction="Return" />
+}
+
+@code {
+    private Province? province;
+    private ProvinceForm? provinceForm;
+    [Parameter]
+    public int ProvinceId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        var responseHttp = await repository.Get<Province>($"/api/province/{ProvinceId}");
+        if (responseHttp.Error)
+        {
+            if (responseHttp.HttpResponseMessage.StatusCode == HttpStatusCode.NotFound)
+            {
+                snackBar.Add("Petición no encontrada.", Severity.Error);
+                navigationManager.NavigateTo("/countries/");
+                return;
+            }
+
+            var message = await responseHttp.GetErrorMessageAsync();
+            snackBar.Add(message, Severity.Error);
+            return;
+        }
+        province = responseHttp.Response;
+
+    }
+
+    private async Task EditAsync()
+    {
+        var responseHttp = await repository.Put("/api/province", province);
+        if (responseHttp.Error)
+        {
+            var message = await responseHttp.GetErrorMessageAsync();
+            snackBar.Add(message, Severity.Error);
+            return;
+        }
+        snackBar.Add("Provincia actualizada correctamente.", Severity.Success);
+        Return();
+
+    }
+
+    private void Return()
+    {
+        provinceForm!.FormPostedSuccessfully = true;
+        navigationManager.NavigateTo($"/countries/details/{province!.CountryId}");
+    }
+}

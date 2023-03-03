@@ -28,22 +28,29 @@
             </ToolBarContent>
             <HeaderContent>
                 <MudTh>CountryId</MudTh>
-                <MudTh>Name</MudTh>
+                <MudTh>Provincia</MudTh>
                 <MudTh>N.- Provinces</MudTh>
                 <MudTh></MudTh>
             </HeaderContent>
             <RowTemplate Context="CountriesContext">
                 <MudTd DataLabel="CountryId">@CountriesContext.CountryId</MudTd>
-                <MudTd DataLabel="Name">@CountriesContext.Name</MudTd>
+                <MudTd DataLabel="Provincia">@CountriesContext.Name</MudTd>
                 <MudTd DataLabel="N.- Provinces">@CountriesContext.ProvinceNumber</MudTd>
                 <MudTd>
+                    <MudFab OnClick="@(() => Detail(CountriesContext.CountryId))"
+                            Color="Color.Warning"
+                            StartIcon="@Icons.Material.Filled.Visibility"
+                            Size="Size.Small"
+                            IconSize="Size.Small">
+                    </MudFab>
                     <MudFab OnClick="@(() => Edit(CountriesContext.CountryId))"
-                            Color="Color.Primary"
+                            Color="Color.Info"
                             StartIcon="@Icons.Material.Filled.Edit"
                             Size="Size.Small"
                             IconSize="Size.Small">
                     </MudFab>
-                    <MudFab OnClick="@(() => DeleteAsync(CountriesContext.CountryId))" Color="Color.Primary"
+                    <MudFab OnClick="@(() => DeleteAsync(CountriesContext.CountryId))" 
+                            Color="Color.Error"
                             StartIcon="@Icons.Material.Filled.DeleteSweep"
                             Size="Size.Small"
                             IconSize="Size.Small">
@@ -74,6 +81,11 @@
     private void Edit(int countryId)
     {
         navigationManager.NavigateTo($"/countries/edit/{countryId}");
+    }
+
+    private void Detail(int countryId)
+    {
+        navigationManager.NavigateTo($"/countries/details/{countryId}");
     }
 
     private async void DeleteAsync(int countryId)
