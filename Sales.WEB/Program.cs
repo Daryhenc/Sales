@@ -20,4 +20,6 @@ builder.Services.AddMudServices(config =>
     config.SnackbarConfiguration.MaxDisplayedSnackbars = 10;
 });
 
+
+
 await builder.Build().RunAsync();

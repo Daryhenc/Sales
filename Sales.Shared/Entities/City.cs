@@ -17,6 +17,6 @@ namespace Sales.Shared.Entities
         public string Name { get; set; } = null!;
         public int ProvinceId { get; set; }
         public Province? Province { get; set; }
-
+        public ICollection<User>? Users { get; set; }
     }
 }

@@ -4,10 +4,7 @@
 @inject ISnackbar snackbar
 @inject NavigationManager navigationManager
 
-
-<h3>Países</h3>
-
-<MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="/contries/create" >Nuevo País</MudButton>
+<MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="/contries/create">Nuevo País</MudButton>
 
 <MudMessageBox @ref="mbox" Title="Confirmación" CancelText="Cancelar">
     <MessageContent>
@@ -19,23 +16,23 @@
 </MudMessageBox>
 
 <GenericList MyList="Countries">
-    <Body>
-        <MudTable Items="@Countries" Hover="true" Breakpoint="Breakpoint.Sm">
+    <Body>      
+        <MudTable Items="@Countries" Hover="true" Bordered="true">
             <ToolBarContent>
-                <MudText Typo="Typo.h6">
-                    Countries
-                </MudText>
+                <MudText Typo="Typo.h6">Paises</MudText>
+                <MudSpacer />
+                <MudTextField @bind-Value="searchString1" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
             </ToolBarContent>
             <HeaderContent>
-                <MudTh>CountryId</MudTh>
-                <MudTh>Provincia</MudTh>
-                <MudTh>N.- Provinces</MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<Country, object>(x=>x.CountryId)">Id de Pais </MudTableSortLabel> </MudTh>
+                <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<Country, object>(x=>x.Name)">País</MudTableSortLabel> </MudTh>
+                <MudTh>N.- de provincias</MudTh>
                 <MudTh></MudTh>
             </HeaderContent>
             <RowTemplate Context="CountriesContext">
-                <MudTd DataLabel="CountryId">@CountriesContext.CountryId</MudTd>
-                <MudTd DataLabel="Provincia">@CountriesContext.Name</MudTd>
-                <MudTd DataLabel="N.- Provinces">@CountriesContext.ProvinceNumber</MudTd>
+                <MudTd DataLabel="CountryId"> @CountriesContext.CountryId</MudTd>
+                <MudTd DataLabel="País">@CountriesContext.Name</MudTd>
+                <MudTd DataLabel="N.- de provincias">@CountriesContext.ProvinceNumber</MudTd>
                 <MudTd>
                     <MudFab OnClick="@(() => Detail(CountriesContext.CountryId))"
                             Color="Color.Warning"
@@ -49,7 +46,7 @@
                             Size="Size.Small"
                             IconSize="Size.Small">
                     </MudFab>
-                    <MudFab OnClick="@(() => DeleteAsync(CountriesContext.CountryId))" 
+                    <MudFab OnClick="@(() => DeleteAsync(CountriesContext.CountryId))"
                             Color="Color.Error"
                             StartIcon="@Icons.Material.Filled.DeleteSweep"
                             Size="Size.Small"
@@ -57,6 +54,9 @@
                     </MudFab>
                 </MudTd>
             </RowTemplate>
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
         </MudTable>
     </Body>
 </GenericList>
@@ -66,6 +66,7 @@
     public List<Country>? Countries { get; set; }
 
     MudMessageBox? mbox { get; set; }
+    private string searchString1 = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -91,7 +92,7 @@
     private async void DeleteAsync(int countryId)
     {
         var result = await mbox!.Show();
-        if (result ==  null || result == false)
+        if (result == null || result == false)
         {
             return;
         }
@@ -110,4 +111,16 @@
 
 
     }
+
+    private bool FilterFunc1(Country element) => FilterFunc(element, searchString1);
+
+    private bool FilterFunc(Country element, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (element.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+
 }
